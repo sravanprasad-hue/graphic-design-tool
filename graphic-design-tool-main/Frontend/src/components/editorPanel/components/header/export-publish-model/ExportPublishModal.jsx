@@ -4,7 +4,7 @@ import jsPDF from "jspdf";
 import "./ExportPublishModal.css";
 
 const API_URL =
-  "http://localhost:5050/api/export";
+  "http://16.59.175.48:5050/api/export";
 
 const ExportModal = ({
   onClose,

@@ -49,7 +49,7 @@ function Profile({ setShowProfile }) {
       try {
  
         const res = await axios.get(
-          "http://localhost:5050/api/profile/profile",
+          "http://16.59.175.48:5050/api/profile/profile",
           {
             headers: {
               Authorization: `Bearer ${token}`

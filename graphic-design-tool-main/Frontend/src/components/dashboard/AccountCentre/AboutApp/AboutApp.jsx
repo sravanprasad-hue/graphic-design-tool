@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./AboutApp.css";
-import StarImage from "../../../../assets/AccountCentre/star.svg";
+import StarImage from "../../../../assets/AccountCentre/Star.svg";
 import Logo from "../../../../assets/logo.png";
 import axios from "axios";
 import Sidebar from "../Sidebar/Sidebar";
@@ -25,7 +25,7 @@ export default function AboutApp() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5050/api/about")
+      .get("http://16.59.175.48:5050/api/about")
       .then((res) => {
         if (res?.data) {
           // CHANGED: Replaced merge logic with explicit mapping
@@ -55,7 +55,7 @@ export default function AboutApp() {
 
   // CHANGED: New function for opening legal pages
   const openLegalPage = (url) => {
-    window.open(`http://localhost:5050${url}`, "_blank");
+    window.open(`http://16.59.175.48:5050${url}`, "_blank");
   };
 
   // CHANGED: Added loading UI
@@ -128,7 +128,7 @@ export default function AboutApp() {
                       Website:{" "}
                       <span className="section-span">
                         <a
-                          href="http://localhost:5050/api/about/website"
+                          href="http://16.59.175.48:5050/api/about/website"
                           target="_blank"
                           rel="noopener noreferrer"
                         >

@@ -137,7 +137,7 @@ function Invite({
       }
 
       await axios.post(
-        "http://localhost:5050/api/collaboration/invite",
+        "http://16.59.175.48:5050/api/collaboration/invite",
         {
           design_id: designId,
           email,
@@ -189,7 +189,7 @@ function Invite({
   const updateRoleInDB = async (user, newRole) => {
     try {
       await axios.put(
-        "http://localhost:5050/api/collaboration/role",
+        "http://16.59.175.48:5050/api/collaboration/role",
         {
           collab_id: user.id,
           role: newRole,
@@ -213,7 +213,7 @@ function Invite({
   const removeUserFromDB = async (user) => {
     try {
       await axios.delete(
-        `http://localhost:5050/api/collaboration/remove/${user.id}`,
+        `http://16.59.175.48:5050/api/collaboration/remove/${user.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

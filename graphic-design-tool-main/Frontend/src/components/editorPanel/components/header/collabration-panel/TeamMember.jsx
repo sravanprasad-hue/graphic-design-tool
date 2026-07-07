@@ -86,7 +86,7 @@ function TeamMembers({
   const loadMembers = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5050/api/collaboration/design/${designId}`,
+        `http://16.59.175.48:5050/api/collaboration/design/${designId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
