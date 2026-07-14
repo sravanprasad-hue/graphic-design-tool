@@ -162,7 +162,7 @@ function HeaderToolsPanel({ onToolChange, onSelectAll }) {
   const saveTool = async (toolGroup, option) => {
     if (!toolGroup?.apiTool || !option?.apiSubTool) return;
     try {
-      await axios.post("http://16.59.175.48:5050/api/editor-tool/tool", {
+      await axios.post("/api/editor-tool/tool", {
         userId,
         canvasId,
         tool: toolGroup.apiTool,
@@ -178,7 +178,7 @@ function HeaderToolsPanel({ onToolChange, onSelectAll }) {
     const load = async () => {
       try {
         const res = await axios.get(
-          "http://16.59.175.48:5050/api/editor-tool/tools",
+          "/api/editor-tool/tools",
           {
             params: { userId, canvasId },
           },

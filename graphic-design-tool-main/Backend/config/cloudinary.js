@@ -1,20 +1,33 @@
 const cloudinary = require("cloudinary").v2;
-require("dotenv").config();
-//config cloudinary.
+
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET
+  api_secret: process.env.API_SECRET,
+  secure: true
 });
 
-(async () => {
+const connectCloudinary = async () => {
   try {
     const result = await cloudinary.api.ping();
-    console.log("Cloudinary Connected ✅");
+
+    console.log("Cloudinary Connected Successfully");
+    console.log("Cloudinary Ping Status:", result?.status);
   } catch (error) {
-    console.log("Cloudinary Connection Failed ❌");
-    console.log(error.message);
+    console.error("Cloudinary Connection Failed");
+
+    if (error?.error) {
+      console.error("Cloudinary Error:", error.error.message);
+      console.error("HTTP Code:", error.error.http_code);
+    } else {
+      console.error(
+        "Cloudinary Error:",
+        error?.message || "Unknown error"
+      );
+    }
   }
-})();
- 
+};
+
+connectCloudinary();
+
 module.exports = cloudinary;

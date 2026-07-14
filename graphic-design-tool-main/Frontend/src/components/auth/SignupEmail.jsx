@@ -29,7 +29,7 @@ function SignupEmail() {
     }
 
     try {
-      const res = await fetch("http://16.59.175.48:5050/api/auth/create-user", {
+      const res = await fetch("/api/auth/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,0 +1,78 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: graphic-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: stackly123
+      MYSQL_DATABASE: stackly_db
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d:ro
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - graphic-network
+
+
+  backend:
+    build:
+      context: ./Backend
+
+    container_name: graphic-backend
+    restart: unless-stopped
+
+    env_file:
+      - ./Backend/.env
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    volumes:
+      - backend_uploads:/app/uploads
+
+    expose:
+      - "5050"
+
+    networks:
+      - graphic-network
+
+
+  frontend:
+    build:
+      context: ./Frontend
+
+    container_name: graphic-frontend
+    restart: unless-stopped
+
+    depends_on:
+      - backend
+
+    ports:
+      - "80:80"
+
+    networks:
+      - graphic-network
+
+
+volumes:
+  mysql_data:
+  backend_uploads:
+
+
+networks:
+  graphic-network:
+    driver: bridge

@@ -44,7 +44,7 @@ function LoginEmail() {
     try {
       // Check user
       const checkRes = await fetch(
-        "http://16.59.175.48:5050/api/auth/check-user",
+        "/api/auth/check-user",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -66,7 +66,7 @@ function LoginEmail() {
       }
 
       // Existing user → Send OTP
-      const otpRes = await fetch("http://16.59.175.48:5050/api/auth/send-otp", {
+      const otpRes = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

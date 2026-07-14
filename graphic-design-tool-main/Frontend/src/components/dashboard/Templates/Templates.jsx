@@ -75,7 +75,7 @@ const openEditor = async (template) => {
  
     const response = await axios.post(
  
-      "http://16.59.175.48:5050/api/cloud-status",
+      "/api/cloud-status",
  
       {
  
@@ -107,7 +107,7 @@ const openEditor = async (template) => {
  
     // await axios.post(
  
-    //   `http://16.59.175.48:5050/api/editor_templates/recent`,
+    //   `/api/editor_templates/recent`,
     //   {
     //     item_id: template.id,
     //     source:"templates"
@@ -115,7 +115,7 @@ const openEditor = async (template) => {
  
     // );
     await axios.post(
-  `http://16.59.175.48:5050/api/templates/${template.id}/use`
+  `/api/templates/${template.id}/use`
 );
  
     const designId = response.data.data.design_id;
@@ -160,7 +160,7 @@ const openEditor = async (template) => {
       setLoading(true);
       try {
         const res = await axios.get(
-          "http://16.59.175.48:5050/api/templates",
+          "/api/templates",
         );
         setTemplates(res.data.templates || []);
         console.log(res.data.data)
@@ -181,7 +181,7 @@ const openEditor = async (template) => {
   // }, []);
  
   // useEffect(() => {
-  //   axios.get("http://16.59.175.48:5050/api/templates").then((res)=>{
+  //   axios.get("/api/templates").then((res)=>{
   //     setTemplates(res.data);
   //     console.log(res.data);
  
@@ -194,7 +194,7 @@ const openEditor = async (template) => {
  
   // const fetchTemplates = async () => {
   //   try {
-  //     const res = await axios.get("http://16.59.175.48:5050/api/templates");
+  //     const res = await axios.get("/api/templates");
  
   //     console.log("API RESPONSE:", res.data); // 👈 ADD THIS
  
@@ -211,7 +211,7 @@ const openEditor = async (template) => {
       if (!query) return fetchTemplates();
  
       const res = await axios.get(
-        `http://16.59.175.48:5050/api/templates/search?search=${query}`
+        `/api/templates/search?search=${query}`
       );
  
       setTemplates(res.data.data || res.data);
@@ -232,7 +232,7 @@ const openEditor = async (template) => {
  
       const res = await axios.get(
  
-        `http://16.59.175.48:5050/api/templates/filter?category=${category}`
+        `/api/templates/filter?category=${category}`
  
       );
  
