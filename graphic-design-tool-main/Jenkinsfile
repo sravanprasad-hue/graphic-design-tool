@@ -4,6 +4,7 @@ pipeline {
     options {
         disableConcurrentBuilds()
         timestamps()
+        skipDefaultCheckout(true)
     }
 
     stages {
@@ -15,63 +16,76 @@ pipeline {
 
         stage('Verify Environment') {
             steps {
-                sh '''
-                    docker --version
-                    docker compose version
-                    aws sts get-caller-identity
-                '''
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker --version
+                        docker compose version
+                        aws sts get-caller-identity
+                    '''
+                }
             }
         }
 
         stage('Prepare Secrets') {
             steps {
-                sh '''
-                    test -r /opt/graphic-design-tool/secrets/backend.env
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        test -r /opt/graphic-design-tool/secrets/backend.env
 
-                    cp /opt/graphic-design-tool/secrets/backend.env Backend/.env
+                        cp /opt/graphic-design-tool/secrets/backend.env Backend/.env
 
-                    chmod 600 Backend/.env
+                        chmod 600 Backend/.env
 
-                    echo "Backend environment prepared"
-                '''
+                        echo "Backend environment prepared"
+                    '''
+                }
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                sh '''
-                    docker compose build
-                '''
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker compose config --quiet
+                        docker compose build
+                    '''
+                }
             }
         }
 
         stage('Deploy Application') {
             steps {
-                sh '''
-                    docker compose up -d --force-recreate
-                '''
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker compose up -d --force-recreate
+                    '''
+                }
             }
         }
 
         stage('Verify Containers') {
             steps {
-                sh '''
-                    docker compose ps
-                '''
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker compose ps
+                    '''
+                }
             }
         }
 
         stage('Health Check') {
             steps {
-                sh '''
-                    sleep 10
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        sleep 10
 
-                    curl \
-                    --fail \
-                    --retry 5 \
-                    --retry-delay 5 \
-                    http://localhost/
-                '''
+                        curl \
+                        --fail \
+                        --retry 5 \
+                        --retry-delay 5 \
+                        http://localhost/
+                    '''
+                }
             }
         }
     }
@@ -84,9 +98,12 @@ pipeline {
         failure {
             echo 'CI/CD deployment failed'
 
-            sh 'docker compose ps || true'
-
-            sh 'docker compose logs --tail=100 || true'
+            dir('graphic-design-tool-main') {
+                sh '''
+                    docker compose ps || true
+                    docker compose logs --tail=100 || true
+                '''
+            }
         }
     }
 }
