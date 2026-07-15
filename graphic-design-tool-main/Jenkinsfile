@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     options {
-        disableConcurrentBuilds()
         timestamps()
-        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
     }
 
     stages {
@@ -16,24 +15,23 @@ pipeline {
 
         stage('Verify Environment') {
             steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        docker --version
-                        docker compose version
-                        aws sts get-caller-identity
-                    '''
-                }
+                sh '''
+                    docker --version
+                    docker compose version
+                '''
             }
         }
 
-        stage('Prepare Secrets') {
+        stage('Prepare Environment') {
             steps {
-                dir('graphic-design-tool-main') {
+                withCredentials([
+                    file(
+                        credentialsId: 'graphic-backend-env',
+                        variable: 'BACKEND_ENV'
+                    )
+                ]) {
                     sh '''
-                        test -r /opt/graphic-design-tool/secrets/backend.env
-
-                        cp /opt/graphic-design-tool/secrets/backend.env Backend/.env
-
+                        cp "$BACKEND_ENV" Backend/.env
                         chmod 600 Backend/.env
 
                         echo "Backend environment prepared"
@@ -42,68 +40,53 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Docker Build') {
             steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        docker compose config --quiet
-                        docker compose build
-                    '''
-                }
+                sh '''
+                    docker compose build
+                '''
             }
         }
 
-        stage('Deploy Application') {
+        stage('Deploy') {
             steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        docker compose up -d --force-recreate
-                    '''
-                }
-            }
-        }
-
-        stage('Verify Containers') {
-            steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        docker compose ps
-                    '''
-                }
+                sh '''
+                    docker compose up -d --force-recreate
+                '''
             }
         }
 
         stage('Health Check') {
             steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        sleep 10
+                sh '''
+                    sleep 15
 
-                        curl \
-                        --fail \
-                        --retry 5 \
-                        --retry-delay 5 \
-                        http://localhost/
-                    '''
-                }
+                    docker compose ps
+
+                    curl --fail \
+                         --retry 5 \
+                         --retry-delay 3 \
+                         http://localhost/
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'CI/CD deployment successful'
+            echo 'CI/CD Deployment Successful'
         }
 
         failure {
-            echo 'CI/CD deployment failed'
+            echo 'CI/CD Deployment Failed'
 
-            dir('graphic-design-tool-main') {
-                sh '''
-                    docker compose ps || true
-                    docker compose logs --tail=100 || true
-                '''
-            }
+            sh 'docker compose ps || true'
+
+            sh 'docker compose logs --tail=100 || true'
+        }
+
+        always {
+            sh 'rm -f Backend/.env || true'
         }
     }
 }
