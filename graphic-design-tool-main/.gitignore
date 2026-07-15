@@ -32,3 +32,11 @@ database/archive/
 # Jenkins temporary files
 .jenkins/
 complete_database.sql
+
+# Terraform local files
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfplan
+terraform/main.tf.save
