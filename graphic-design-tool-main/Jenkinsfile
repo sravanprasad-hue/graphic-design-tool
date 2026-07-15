@@ -50,7 +50,7 @@ pipeline {
 
         stage('Terraform Validate') {
             steps {
-                dir('terraform') {
+                dir('graphic-design-tool-main/terraform') {
                     sh '''
                         terraform init
                         terraform fmt -check
