@@ -15,59 +15,72 @@ pipeline {
 
         stage('Verify Environment') {
             steps {
-                sh '''
-                    docker --version
-                    docker compose version
-                '''
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker --version
+                        docker compose version
+                        pwd
+                        ls -la
+                        test -d Backend
+                        test -d Frontend
+                        test -f docker-compose.yml
+                    '''
+                }
             }
         }
 
         stage('Prepare Environment') {
             steps {
-                withCredentials([
-                    file(
-                        credentialsId: 'graphic-backend-env',
-                        variable: 'BACKEND_ENV'
-                    )
-                ]) {
-                    sh '''
-                        cp "$BACKEND_ENV" Backend/.env
-                        chmod 600 Backend/.env
-
-                        echo "Backend environment prepared"
-                    '''
+                dir('graphic-design-tool-main') {
+                    withCredentials([
+                        file(
+                            credentialsId: 'graphic-backend-env',
+                            variable: 'BACKEND_ENV'
+                        )
+                    ]) {
+                        sh '''
+                            cp "$BACKEND_ENV" Backend/.env
+                            chmod 600 Backend/.env
+                            echo "Backend environment prepared"
+                        '''
+                    }
                 }
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh '''
-                    docker compose build
-                '''
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker compose build
+                    '''
+                }
             }
         }
 
         stage('Deploy') {
             steps {
-                sh '''
-                    docker compose up -d --force-recreate
-                '''
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker compose up -d --force-recreate
+                    '''
+                }
             }
         }
 
         stage('Health Check') {
             steps {
-                sh '''
-                    sleep 15
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        sleep 15
+                        docker compose ps
 
-                    docker compose ps
-
-                    curl --fail \
-                         --retry 5 \
-                         --retry-delay 3 \
-                         http://localhost/
-                '''
+                        curl --fail \
+                             --retry 5 \
+                             --retry-delay 3 \
+                             http://localhost/
+                    '''
+                }
             }
         }
     }
@@ -80,13 +93,16 @@ pipeline {
         failure {
             echo 'CI/CD Deployment Failed'
 
-            sh 'docker compose ps || true'
-
-            sh 'docker compose logs --tail=100 || true'
+            dir('graphic-design-tool-main') {
+                sh 'docker compose ps || true'
+                sh 'docker compose logs --tail=100 || true'
+            }
         }
 
         always {
-            sh 'rm -f Backend/.env || true'
+            dir('graphic-design-tool-main') {
+                sh 'rm -f Backend/.env || true'
+            }
         }
     }
 }
