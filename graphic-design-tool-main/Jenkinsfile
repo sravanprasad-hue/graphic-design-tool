@@ -48,19 +48,28 @@ pipeline {
             }
         }
 
-        stage('Terraform Validate') {
-            steps {
-                dir('graphic-design-tool-main/terraform') {
-                    sh '''
-                        terraform init
-                        terraform fmt -check
-                        terraform validate
-                        terraform plan -input=false
-                    '''
-                }
-            }
+        stage('Terraform Plan') {
+    steps {
+        dir('graphic-design-tool-main/terraform') {
+            sh '''
+                terraform init -input=false
+                terraform fmt -check
+                terraform validate
+                terraform plan -input=false -out=tfplan
+            '''
         }
+    }
+}
 
+stage('Terraform Apply') {
+    steps {
+        dir('graphic-design-tool-main/terraform') {
+            sh '''
+                terraform apply -input=false -auto-approve tfplan
+            '''
+        }
+    }
+}
         stage('Docker Build') {
             steps {
                 dir('graphic-design-tool-main') {
