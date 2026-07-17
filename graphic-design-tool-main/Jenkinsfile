@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -49,38 +50,41 @@ pipeline {
         }
 
         stage('Terraform Plan') {
-    steps {
-        dir('graphic-design-tool-main/terraform') {
-            sh '''
-                terraform init -input=false
-                terraform fmt -check
-                terraform validate
-                terraform plan -input=false -out=tfplan
-            '''
+            steps {
+                dir('graphic-design-tool-main/terraform') {
+                    sh '''
+                        terraform init -input=false
+                        terraform fmt -check
+                        terraform validate
+                        terraform plan -input=false -out=tfplan
+                    '''
+                }
+            }
         }
-    }
-}
 
-stage('Terraform Apply') {
-    steps {
-        dir('graphic-design-tool-main/terraform') {
-            sh '''
-                terraform apply -input=false -auto-approve tfplan
-            '''
+        stage('Terraform Apply') {
+            steps {
+                dir('graphic-design-tool-main/terraform') {
+                    sh '''
+                        terraform apply -input=false -auto-approve tfplan
+                    '''
+                }
+            }
         }
-    }
-}        
 
-stage('Deploy with Ansible') {
-    steps {
-        sh '''
-            cd /home/ubuntu/ansible-project
-            ansible-playbook playbooks/site.yml
-        '''
+        stage('Deploy with Ansible') {
+            steps {
+                sh '''
+                    cd /home/ubuntu/ansible-project
+                    ansible-playbook playbooks/site.yml
+                '''
+            }
+        }
+
     }
-}
 
     post {
+
         success {
             echo 'CI/CD Deployment Successful'
         }
