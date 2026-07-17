@@ -69,43 +69,16 @@ stage('Terraform Apply') {
             '''
         }
     }
-}
-        stage('Docker Build') {
-            steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        docker compose build
-                    '''
-                }
-            }
-        }
+}        
 
-        stage('Deploy') {
-            steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        docker compose up -d --force-recreate
-                    '''
-                }
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        sleep 15
-                        docker compose ps
-
-                        curl --fail \
-                             --retry 5 \
-                             --retry-delay 3 \
-                             http://localhost/
-                    '''
-                }
-            }
-        }
+stage('Deploy with Ansible') {
+    steps {
+        sh '''
+            cd /home/ubuntu/ansible-project
+            ansible-playbook playbooks/site.yml
+        '''
     }
+}
 
     post {
         success {
