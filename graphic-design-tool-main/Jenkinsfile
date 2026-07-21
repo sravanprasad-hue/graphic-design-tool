@@ -49,7 +49,19 @@ pipeline {
             }
         }
 
-       
+        stage('Deploy Application') {
+            steps {
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker compose down || true
+                        docker compose up -d --build
+                        docker compose ps
+                    '''
+                }
+            }
+        }
+
+    }
 
     post {
 
