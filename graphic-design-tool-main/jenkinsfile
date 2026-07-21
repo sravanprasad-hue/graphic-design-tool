@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Verify Environment') {
+            steps {
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker --version
+                        docker compose version
+                        pwd
+                        ls -la
+                        test -d Backend
+                        test -d Frontend
+                        test -f docker-compose.yml
+                    '''
+                }
+            }
+        }
+
+        stage('Prepare Environment') {
+            steps {
+                dir('graphic-design-tool-main') {
+                    withCredentials([
+                        file(
+                            credentialsId: 'graphic-backend-env',
+                            variable: 'BACKEND_ENV'
+                        )
+                    ]) {
+                        sh '''
+                            cp "$BACKEND_ENV" Backend/.env
+                            chmod 600 Backend/.env
+                            echo "Backend environment prepared"
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy Application') {
+            steps {
+                dir('graphic-design-tool-main') {
+                    sh '''
+                        docker compose down || true
+                        docker compose up -d --build
+                        docker compose ps
+                    '''
+                }
+            }
+        }
+
+    }
+
+    post {
+
+        success {
+            echo 'CI/CD Deployment Successful'
+        }
+
+        failure {
+            echo 'CI/CD Deployment Failed'
+
+            dir('graphic-design-tool-main') {
+                sh 'docker compose ps || true'
+                sh 'docker compose logs --tail=100 || true'
+            }
+        }
+
+        always {
+            dir('graphic-design-tool-main') {
+                sh 'rm -f Backend/.env || true'
+            }
+        }
+    }
+}
