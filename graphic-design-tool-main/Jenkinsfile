@@ -49,16 +49,7 @@ pipeline {
             }
         }
 
-        stage('Deploy with Ansible') {
-            steps {
-                sh '''
-                    cd /home/ubuntu/ansible-project
-                    ansible-playbook playbooks/site.yml
-                '''
-            }
-        }
-
-    }
+       
 
     post {
 
