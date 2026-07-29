@@ -18,8 +18,9 @@ pipeline {
         stage('Verify Workspace') {
             steps {
                 sh '''
-                pwd
-                ls -la
+                    echo "===== WORKSPACE ====="
+                    pwd
+                    ls -la
                 '''
             }
         }
@@ -29,19 +30,32 @@ pipeline {
                 sshagent(credentials: ['blue-green-key']) {
 
                     sh '''
-                    echo "===== BLUE SERVER ====="
-                    ssh -o StrictHostKeyChecking=no ubuntu@$BLUE_HOST "
-                        hostname
-                        pwd
-                        ls -ld $PROJECT_DIR
-                    "
+                        echo "===== SSH KEYS LOADED IN AGENT ====="
+                        ssh-add -l
 
-                    echo "===== GREEN SERVER ====="
-                    ssh -o StrictHostKeyChecking=no ubuntu@$GREEN_HOST "
-                        hostname
-                        pwd
-                        ls -ld $PROJECT_DIR
-                    "
+                        echo ""
+                        echo "===== BLUE SERVER ====="
+
+                        ssh -vvv \
+                        -o StrictHostKeyChecking=no \
+                        -o UserKnownHostsFile=/dev/null \
+                        ubuntu@$BLUE_HOST <<EOF
+hostname
+pwd
+ls -ld $PROJECT_DIR
+EOF
+
+                        echo ""
+                        echo "===== GREEN SERVER ====="
+
+                        ssh -vvv \
+                        -o StrictHostKeyChecking=no \
+                        -o UserKnownHostsFile=/dev/null \
+                        ubuntu@$GREEN_HOST <<EOF
+hostname
+pwd
+ls -ld $PROJECT_DIR
+EOF
                     '''
                 }
             }
@@ -55,6 +69,10 @@ pipeline {
 
         failure {
             echo 'SSH verification failed.'
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
