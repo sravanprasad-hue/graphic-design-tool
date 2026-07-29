@@ -90,32 +90,15 @@ EOF
             }
         }
 
-    }
+        stage('Build Frontend') {
+            steps {
+                sshagent(credentials: ['blue-green-key']) {
+                    sh '''
+                        echo "===== BUILDING FRONTEND ON GREEN ====="
 
-    post {
-        success {
-            echo 'Backend deployed successfully.'
-        }
-
-        failure {
-            echo 'Pipeline failed.'
-        }
-
-        always {
-            cleanWs()
-        }
-    }
-}
-
-stage('Build Frontend') {
-    steps {
-        sshagent(credentials: ['blue-green-key']) {
-            sh '''
-                echo "===== BUILDING FRONTEND ON GREEN ====="
-
-                ssh -o StrictHostKeyChecking=no \
-                -o UserKnownHostsFile=/dev/null \
-                ubuntu@$GREEN_HOST <<EOF
+                        ssh -o StrictHostKeyChecking=no \
+                        -o UserKnownHostsFile=/dev/null \
+                        ubuntu@$GREEN_HOST <<EOF
 
 cd /home/ubuntu/graphic-design-tool/graphic-design-tool-main/Frontend
 
@@ -134,9 +117,24 @@ npm run build
 echo "Frontend build completed."
 
 EOF
-            '''
+                    '''
+                }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo 'Backend and Frontend deployed successfully.'
+        }
+
+        failure {
+            echo 'Pipeline failed.'
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
-
-
