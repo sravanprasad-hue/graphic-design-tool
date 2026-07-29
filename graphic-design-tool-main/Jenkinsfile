@@ -28,7 +28,6 @@ pipeline {
         stage('Test SSH Connection') {
             steps {
                 sshagent(credentials: ['blue-green-key']) {
-
                     sh '''
                         echo "===== SSH KEYS LOADED IN AGENT ====="
                         ssh-add -l
@@ -36,8 +35,7 @@ pipeline {
                         echo ""
                         echo "===== BLUE SERVER ====="
 
-                        ssh -vvv \
-                        -o StrictHostKeyChecking=no \
+                        ssh -o StrictHostKeyChecking=no \
                         -o UserKnownHostsFile=/dev/null \
                         ubuntu@$BLUE_HOST <<EOF
 hostname
@@ -48,8 +46,7 @@ EOF
                         echo ""
                         echo "===== GREEN SERVER ====="
 
-                        ssh -vvv \
-                        -o StrictHostKeyChecking=no \
+                        ssh -o StrictHostKeyChecking=no \
                         -o UserKnownHostsFile=/dev/null \
                         ubuntu@$GREEN_HOST <<EOF
 hostname
@@ -60,19 +57,48 @@ EOF
                 }
             }
         }
-    }
 
-    stage('Deploy Backend to Green') {
-    ...
+        stage('Deploy Backend to Green') {
+            steps {
+                sshagent(credentials: ['blue-green-key']) {
+                    sh '''
+                        echo "===== DEPLOYING BACKEND TO GREEN ====="
+
+                        ssh -o StrictHostKeyChecking=no \
+                        -o UserKnownHostsFile=/dev/null \
+                        ubuntu@$GREEN_HOST <<EOF
+
+cd /home/ubuntu/graphic-design-tool/graphic-design-tool-main/Backend
+
+echo "Current Directory:"
+pwd
+
+echo "Pulling latest code..."
+git pull origin main
+
+echo "Installing dependencies..."
+npm install
+
+echo "Restarting PM2..."
+pm2 restart graphic-backend
+
+echo "Backend deployment completed."
+
+EOF
+                    '''
+                }
+            }
+        }
+
     }
 
     post {
         success {
-            echo 'SSH connectivity verified successfully.'
+            echo 'Backend deployed successfully.'
         }
 
         failure {
-            echo 'SSH verification failed.'
+            echo 'Pipeline failed.'
         }
 
         always {
