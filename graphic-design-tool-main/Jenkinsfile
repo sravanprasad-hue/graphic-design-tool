@@ -1,9 +1,10 @@
 pipeline {
     agent any
 
-    options {
-        timestamps()
-        disableConcurrentBuilds()
+    environment {
+        BLUE_HOST = "13.238.248.58"
+        GREEN_HOST = "13.54.192.16"
+        PROJECT_DIR = "/home/ubuntu/graphic-design-tool/graphic-design-tool-main"
     }
 
     stages {
@@ -14,74 +15,46 @@ pipeline {
             }
         }
 
-        stage('Verify Environment') {
+        stage('Verify Workspace') {
             steps {
-                dir('graphic-design-tool-main') {
+                sh '''
+                pwd
+                ls -la
+                '''
+            }
+        }
+
+        stage('Test SSH Connection') {
+            steps {
+                sshagent(credentials: ['blue-green-key']) {
+
                     sh '''
-                        docker --version
-                        docker compose version
+                    echo "===== BLUE SERVER ====="
+                    ssh -o StrictHostKeyChecking=no ubuntu@$BLUE_HOST "
+                        hostname
                         pwd
-                        ls -la
-                        test -d Backend
-                        test -d Frontend
-                        test -f docker-compose.yml
+                        ls -ld $PROJECT_DIR
+                    "
+
+                    echo "===== GREEN SERVER ====="
+                    ssh -o StrictHostKeyChecking=no ubuntu@$GREEN_HOST "
+                        hostname
+                        pwd
+                        ls -ld $PROJECT_DIR
+                    "
                     '''
                 }
             }
         }
-
-        stage('Prepare Environment') {
-            steps {
-                dir('graphic-design-tool-main') {
-                    withCredentials([
-                        file(
-                            credentialsId: 'graphic-backend-env',
-                            variable: 'BACKEND_ENV'
-                        )
-                    ]) {
-                        sh '''
-                            cp "$BACKEND_ENV" Backend/.env
-                            chmod 600 Backend/.env
-                            echo "Backend environment prepared"
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Deploy Application') {
-            steps {
-                dir('graphic-design-tool-main') {
-                    sh '''
-                        docker compose down || true
-                        docker compose up -d --build
-                        docker compose ps
-                    '''
-                }
-            }
-        }
-
     }
 
     post {
-
         success {
-            echo 'CI/CD Deployment Successful'
+            echo 'SSH connectivity verified successfully.'
         }
 
         failure {
-            echo 'CI/CD Deployment Failed'
-
-            dir('graphic-design-tool-main') {
-                sh 'docker compose ps || true'
-                sh 'docker compose logs --tail=100 || true'
-            }
-        }
-
-        always {
-            dir('graphic-design-tool-main') {
-                sh 'rm -f Backend/.env || true'
-            }
+            echo 'SSH verification failed.'
         }
     }
 }
