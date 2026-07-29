@@ -62,6 +62,10 @@ EOF
         }
     }
 
+    stage('Deploy Backend to Green') {
+    ...
+    }
+
     post {
         success {
             echo 'SSH connectivity verified successfully.'
