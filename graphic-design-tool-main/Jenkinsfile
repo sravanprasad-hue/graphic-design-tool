@@ -5,18 +5,17 @@ pipeline {
         AWS_REGION = 'ap-south-1'
         AWS_ACCOUNT_ID = '428708298136'
 
-        BACKEND_REPO = 'graphic-design-backend'
-        FRONTEND_REPO = 'graphic-design-frontend'
+        BACKEND_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/graphic-design-backend:latest"
+        FRONTEND_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/graphic-design-frontend:latest"
+    }
 
-        BACKEND_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${BACKEND_REPO}:latest"
-        FRONTEND_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${FRONTEND_REPO}:latest"
-
-        CLUSTER_NAME = 'graphic-design-eks'
+    options {
+        timestamps()
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Source Code') {
             steps {
                 checkout scm
             }
@@ -35,38 +34,38 @@ pipeline {
         stage('Login to Amazon ECR') {
             steps {
                 sh '''
-                aws ecr get-login-password --region $AWS_REGION | \
+                aws ecr get-login-password --region ${AWS_REGION} | \
                 docker login --username AWS --password-stdin \
                 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
                 '''
             }
         }
 
-        stage('Build Backend Image') {
+        stage('Build Backend Docker Image') {
             steps {
                 dir('graphic-design-tool-main/Backend') {
                     sh '''
-                    docker build -t $BACKEND_IMAGE .
+                    docker build -t ${BACKEND_IMAGE} .
                     '''
                 }
             }
         }
 
-        stage('Build Frontend Image') {
+        stage('Build Frontend Docker Image') {
             steps {
                 dir('graphic-design-tool-main/Frontend') {
                     sh '''
-                    docker build -t $FRONTEND_IMAGE .
+                    docker build -t ${FRONTEND_IMAGE} .
                     '''
                 }
             }
         }
 
-        stage('Push Images') {
+        stage('Push Images to Amazon ECR') {
             steps {
                 sh '''
-                docker push $BACKEND_IMAGE
-                docker push $FRONTEND_IMAGE
+                docker push ${BACKEND_IMAGE}
+                docker push ${FRONTEND_IMAGE}
                 '''
             }
         }
@@ -75,36 +74,74 @@ pipeline {
             steps {
                 sh '''
                 aws eks update-kubeconfig \
-                  --name $CLUSTER_NAME \
-                  --region $AWS_REGION
+                --region ${AWS_REGION} \
+                --name graphic-design-eks
                 '''
             }
         }
 
-        stage('Deploy to EKS') {
+        stage('Verify Kubernetes Files') {
             steps {
                 dir('graphic-design-tool-main/k8s') {
                     sh '''
-                    kubectl apply -f .
+                    echo "Current Directory:"
+                    pwd
 
-                    kubectl rollout restart deployment graphic-design-backend
-                    kubectl rollout restart deployment graphic-design-frontend
-
-                    kubectl rollout status deployment/graphic-design-backend
-                    kubectl rollout status deployment/graphic-design-frontend
+                    echo ""
+                    echo "Available Files:"
+                    ls -l
                     '''
                 }
+            }
+        }
+
+        stage('Deploy to Amazon EKS') {
+            steps {
+                dir('graphic-design-tool-main/k8s') {
+                    sh '''
+                    kubectl apply -f backend-deployment.yaml
+                    kubectl apply -f backend-service.yaml
+                    kubectl apply -f frontend-deployment.yaml
+                    kubectl apply -f frontend-service.yaml
+                    '''
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                echo "============================"
+                echo "Deployments"
+                echo "============================"
+                kubectl get deployments
+
+                echo ""
+                echo "Pods"
+                echo "============================"
+                kubectl get pods
+
+                echo ""
+                echo "Services"
+                echo "============================"
+                kubectl get svc
+                '''
             }
         }
     }
 
     post {
+
         success {
-            echo 'EKS Deployment Successful.'
+            echo '========================================'
+            echo 'Deployment Completed Successfully'
+            echo '========================================'
         }
 
         failure {
-            echo 'Pipeline Failed.'
+            echo '========================================'
+            echo 'Pipeline Failed'
+            echo '========================================'
         }
 
         always {
