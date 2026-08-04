@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphic-design-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: graphic-design-frontend
+  template:
+    metadata:
+      labels:
+        app: graphic-design-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: 428708298136.dkr.ecr.ap-south-1.amazonaws.com/graphic-design-frontend:latest
+        ports:
+        - containerPort: 80
